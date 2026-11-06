@@ -19,7 +19,7 @@
     {% endif %}
     {% if can_manage %}
       <form method="post" action="{{ url_for('test_cases.delete', test_id=test_case.id) }}"
-            onsubmit="return confirm('Delete this test case?');">
+            data-confirm="Delete this test case?">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-outline-danger" type="submit">Delete</button>
       </form>

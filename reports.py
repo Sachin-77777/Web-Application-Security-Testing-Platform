@@ -14,12 +14,15 @@ from flask_login import current_user
 from access import application_choices, can_manage_application, get_application_or_403
 from auth import login_required
 from extensions import db
-from models import Report
+from mailer import send_report_notification
+from models import Notification, Report
 from report_service import (
     can_view_report,
+    generate_pdf_report,
     generate_report,
     report_file_path,
     report_summary,
+    reports_dir,
     visible_reports,
 )
 from util import form_int, paginate
@@ -52,7 +55,26 @@ def generate():
         abort(403)
 
     record = generate_report(application, current_user)
-    flash("Summary report generated.", "success")
+    
+    # Send email notification to the application owner (client)
+    if application.owner.email:
+        send_report_notification(
+            application.owner.email,
+            application.name,
+            current_user.username,
+            record.created_at,
+        )
+    
+    # Create in-app notification for the application owner
+    notification = Notification(
+        user_id=application.owner_id,
+        message=f"A security report has been generated for your application: {application.name}",
+        link=url_for("reports.detail", report_id=record.id),
+    )
+    db.session.add(notification)
+    db.session.commit()
+    
+    flash("Summary report generated and notification sent.", "success")
     return redirect(url_for("reports.detail", report_id=record.id))
 
 
@@ -89,6 +111,34 @@ def download(report_id):
         mimetype="text/html",
         as_attachment=True,
         download_name=os.path.basename(path),
+    )
+
+
+@reports_bp.route("/<int:report_id>/download-pdf")
+@login_required
+def download_pdf(report_id):
+    """Generate and download a PDF version of the report."""
+    report = db.session.get(Report, report_id)
+    if report is None:
+        abort(404)
+    if not can_view_report(current_user, report):
+        abort(403)
+    
+    pdf_filename = generate_pdf_report(report.application, report.author)
+    if not pdf_filename:
+        flash("PDF generation is not available. Please install weasyprint.", "error")
+        return redirect(url_for("reports.detail", report_id=report.id))
+    
+    pdf_path = os.path.join(reports_dir(), pdf_filename)
+    if not os.path.isfile(pdf_path):
+        flash("PDF generation failed. Please try again.", "error")
+        return redirect(url_for("reports.detail", report_id=report.id))
+    
+    return send_file(
+        pdf_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=pdf_filename,
     )
 
 

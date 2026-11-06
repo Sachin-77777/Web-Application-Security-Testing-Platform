@@ -15,6 +15,8 @@ from constants import grade_from_score, security_score
 from extensions import db
 from models import Report
 
+WEASYPRINT_AVAILABLE = False
+
 
 def reports_dir():
     """Folder that holds generated report documents."""
@@ -118,3 +120,33 @@ def generate_report(application, user):
     db.session.add(record)
     db.session.commit()
     return record
+
+
+def generate_pdf_report(application, user):
+    """Generate a PDF version of the report using weasyprint."""
+    try:
+        from weasyprint import HTML
+    except (ImportError, OSError):
+        return None
+    
+    summary = report_summary(application)
+    generated_at = datetime.now(timezone.utc)
+    html = render_template(
+        "dashboard/report_document.html",
+        application=application,
+        summary=summary,
+        generated_at=generated_at,
+        generated_by=user,
+    )
+    
+    filename = "report-app-{0}-{1}.pdf".format(
+        application.id,
+        generated_at.strftime("%Y%m%d-%H%M%S"),
+    )
+    path = os.path.join(reports_dir(), filename)
+    
+    try:
+        HTML(string=html).write_pdf(path)
+        return filename
+    except Exception:
+        return None

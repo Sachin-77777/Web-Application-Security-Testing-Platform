@@ -20,6 +20,11 @@ def home():
         reports_query = reports_query.filter(Report.app_id.in_(allowed_ids or [0]))
     reports = reports_query.limit(8).all()
 
+    severity_counts = {
+        level: sum(1 for item in vulns if item.severity == level)
+        for level in ("Critical", "High", "Medium", "Low")
+    }
+
     return render_template(
         "dashboard/home.html",
         applications=apps,
@@ -28,8 +33,14 @@ def home():
         reports=reports,
         open_vulns=sum(1 for item in vulns if item.status == "Open"),
         failed_tests=sum(1 for item in tests if item.status == "Failed"),
-        severity_counts={
-            level: sum(1 for item in vulns if item.severity == level)
-            for level in ("Critical", "High", "Medium", "Low")
-        },
+        # Work that still needs someone to pick it up.
+        unassigned_tests=sum(1 for item in tests if item.assigned_to is None),
+        awaiting_tests=sum(1 for item in apps if not item.test_cases),
+        my_pending_tests=[
+            item
+            for item in tests
+            if item.assigned_to == current_user.id and item.status == "Pending"
+        ],
+        severity_counts=severity_counts,
+        severity_total=max(1, sum(severity_counts.values())),
     )

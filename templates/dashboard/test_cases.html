@@ -32,11 +32,30 @@
   </div>
 </form>
 
-<div class="card shadow-sm">
+{% if current_user.is_admin %}
+<form class="mb-3" method="post" action="{{ url_for('test_cases.bulk_assign') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="row g-2 mb-3">
+    <div class="col-md-8">
+      <label class="visually-hidden" for="assign_to">Assign selected to</label>
+      <select class="form-select" id="assign_to" name="assign_to">
+        <option value="">Select assignee...</option>
+        {% for user in assignees %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <button class="btn btn-primary w-100" type="submit">Assign selected</button>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
       <thead>
         <tr>
+          {% if current_user.is_admin %}<th><input type="checkbox" id="select-all" class="form-check-input"></th>{% endif %}
           <th>Test</th>
           <th>Application</th>
           <th>Category</th>
@@ -49,6 +68,7 @@
         {% for test in test_cases %}
           {% set is_owner = current_user.is_admin or test.application.owner_id == current_user.id %}
           <tr>
+            {% if current_user.is_admin %}<td><input type="checkbox" name="test_ids" value="{{ test.id }}" class="form-check-input test-checkbox"></td>{% endif %}
             <td><a href="{{ url_for('test_cases.detail', test_id=test.id) }}">{{ test.test_name }}</a></td>
             <td>
               <a href="{{ url_for('applications.detail', app_id=test.app_id) }}">{{ test.application.name }}</a>
@@ -57,6 +77,12 @@
             <td>{{ status_badge(test.status) }}</td>
             <td>{{ test.assignee.username if test.assignee else '—' }}</td>
             <td class="text-end">
+              {% if not current_user.is_client and test.assigned_to != current_user.id %}
+                <form class="d-inline" method="post" action="{{ url_for('test_cases.assign_to_me', test_id=test.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-primary" type="submit">Assign to me</button>
+                </form>
+              {% endif %}
               {% if not current_user.is_client and (is_owner or test.assigned_to == current_user.id) %}
                 <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('test_cases.edit', test_id=test.id) }}">
                   {{ 'Update status' if test.assigned_to == current_user.id and not is_owner else 'Edit' }}
@@ -64,7 +90,7 @@
               {% endif %}
               {% if is_owner and not current_user.is_client %}
                 <form class="d-inline" method="post" action="{{ url_for('test_cases.delete', test_id=test.id) }}"
-                      onsubmit="return confirm('Delete this test case?');">
+                      data-confirm="Delete this test case?">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                 </form>
@@ -72,7 +98,7 @@
             </td>
           </tr>
         {% else %}
-          <tr><td colspan="6" class="text-muted">No test cases found.</td></tr>
+          <tr><td colspan="{{ 7 if current_user.is_admin else 6 }}" class="text-muted">No test cases found.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -81,4 +107,15 @@
     {{ pagination_footer(pagination, 'test_cases.index') }}
   </div>
 </div>
+</form>
+{% endif %}
+
+{% if current_user.is_admin %}
+<script>
+document.getElementById('select-all').addEventListener('change', function() {
+  const checkboxes = document.querySelectorAll('.test-checkbox');
+  checkboxes.forEach(cb => cb.checked = this.checked);
+});
+</script>
+{% endif %}
 {% endblock %}

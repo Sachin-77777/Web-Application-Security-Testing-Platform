@@ -201,3 +201,21 @@ class PasswordResetOTP(db.Model):
 
     def __repr__(self):
         return f"<PasswordResetOTP user={self.user_id}>"
+
+
+class Notification(db.Model):
+    """In-app notification for users about important events."""
+
+    __tablename__ = "notifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    link = db.Column(db.String(512), nullable=True)
+    is_read = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+
+    user = db.relationship("User", backref="notifications")
+
+    def __repr__(self):
+        return f"<Notification user={self.user_id} read={self.is_read}>"

@@ -71,7 +71,7 @@
               <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('reports.download', report_id=report.id) }}">Download</a>
               {% if current_user.is_admin or report.generated_by == current_user.id %}
                 <form class="d-inline" method="post" action="{{ url_for('reports.delete', report_id=report.id) }}"
-                      onsubmit="return confirm('Delete this report?');">
+                      data-confirm="Delete this report?">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                 </form>

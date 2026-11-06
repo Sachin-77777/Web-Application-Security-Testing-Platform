@@ -6,6 +6,7 @@ Flask-JWT-Extended>=4.6.0
 PyMySQL>=1.1.0
 python-dotenv>=1.0.0
 Werkzeug>=3.0.0
+weasyprint>=60.0
 
 # Test suite (pytest -q)
 pytest>=8.0.0

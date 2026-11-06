@@ -60,12 +60,14 @@ def index():
             )
         )
     tests = paginate(query)
+    assignees = _assignee_choices() if current_user.is_admin else []
     return render_template(
         "dashboard/test_cases.html",
         test_cases=tests.items,
         pagination=tests,
         can_create=bool(application_choices()) and not current_user.is_client,
         q=query_text,
+        assignees=assignees,
     )
 
 
@@ -204,6 +206,21 @@ def edit(test_id):
     )
 
 
+@test_cases_bp.route("/<int:test_id>/assign-to-me", methods=["POST"])
+@login_required
+def assign_to_me(test_id):
+    """Let a tester claim a test case with a single click."""
+    test_case = db.session.get(TestCase, test_id)
+    if test_case is None:
+        abort(404)
+    if not can_edit_test_case(current_user, test_case):
+        abort(403)
+    test_case.assigned_to = current_user.id
+    db.session.commit()
+    flash("Test case assigned to you.", "success")
+    return redirect(url_for("test_cases.index"))
+
+
 @test_cases_bp.route("/<int:test_id>/delete", methods=["POST"])
 @login_required
 def delete(test_id):
@@ -215,4 +232,39 @@ def delete(test_id):
     db.session.delete(test_case)
     db.session.commit()
     flash("Test case deleted.", "success")
+    return redirect(url_for("test_cases.index"))
+
+
+@test_cases_bp.route("/bulk-assign", methods=["POST"])
+@login_required
+def bulk_assign():
+    """Allow admins to assign multiple test cases to a user at once."""
+    if not current_user.is_admin:
+        abort(403)
+    
+    test_ids = request.form.getlist("test_ids")
+    assign_to_id = form_int("assign_to")
+    
+    if not test_ids:
+        flash("No test cases selected.", "error")
+        return redirect(url_for("test_cases.index"))
+    
+    if assign_to_id is None:
+        flash("Please select an assignee.", "error")
+        return redirect(url_for("test_cases.index"))
+    
+    allowed_ids = {user.id for user in _assignee_choices()}
+    if assign_to_id not in allowed_ids:
+        flash("Invalid assignee.", "error")
+        return redirect(url_for("test_cases.index"))
+    
+    count = 0
+    for test_id in test_ids:
+        test_case = db.session.get(TestCase, int(test_id))
+        if test_case:
+            test_case.assigned_to = assign_to_id
+            count += 1
+    
+    db.session.commit()
+    flash(f"{count} test case(s) assigned.", "success")
     return redirect(url_for("test_cases.index"))

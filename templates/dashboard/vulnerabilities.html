@@ -97,7 +97,7 @@
               {% if not current_user.is_client and (current_user.is_admin or vuln.application.owner_id == current_user.id) %}
                 <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('vulnerabilities.edit', vuln_id=vuln.id) }}">Edit</a>
                 <form class="d-inline" method="post" action="{{ url_for('vulnerabilities.delete', vuln_id=vuln.id) }}"
-                      onsubmit="return confirm('Delete this vulnerability?');">
+                      data-confirm="Delete this vulnerability?">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                 </form>

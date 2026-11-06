@@ -25,6 +25,23 @@ def _validate(name, target_url):
     return errors
 
 
+def status_timeline(application):
+    """Return the engagement progress as a list of ``{label, done}`` steps.
+
+    Shown on the application page so a client can see where their submission
+    has got to instead of just a "Pending" badge.
+    """
+    tests = application.test_cases
+    has_tests = bool(tests)
+    testing_done = has_tests and all(item.status != "Pending" for item in tests)
+    return [
+        {"label": "Submitted", "done": True},
+        {"label": "Tests planned", "done": has_tests},
+        {"label": "Testing complete", "done": testing_done},
+        {"label": "Report ready", "done": bool(application.reports)},
+    ]
+
+
 @applications_bp.route("/")
 @login_required
 def index():
@@ -85,6 +102,7 @@ def detail(app_id):
     return render_template(
         "dashboard/application_detail.html",
         application=application,
+        timeline=status_timeline(application),
         can_manage=can_manage_application(current_user, application),
         can_test=can_conduct_testing(current_user, application),
     )

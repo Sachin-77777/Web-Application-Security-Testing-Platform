@@ -11,7 +11,10 @@
       {% if current_user.is_admin %} · Owner {{ application.owner.username }}{% endif %}
     </p>
   </div>
-  <a class="btn btn-outline-secondary" href="{{ url_for('reports.download', report_id=report.id) }}">Download HTML</a>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('reports.download', report_id=report.id) }}">Download HTML</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('reports.download_pdf', report_id=report.id) }}">Download PDF</a>
+  </div>
 </div>
 
 {% set score_tone = 'text-success' if summary.score >= 75 else ('text-warning' if summary.score >= 40 else 'text-danger') %}
