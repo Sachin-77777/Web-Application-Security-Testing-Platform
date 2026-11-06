@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "dashboard/_macros.html" import status_badge, pagination_footer %}
+{% block title %}Test cases{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">Test cases</h1>
+    <p class="text-muted mb-0">
+      {% if current_user.is_admin %}
+        All security test procedures across applications.
+      {% elif current_user.is_client %}
+        Read-only view of the tests run on the applications you submitted.
+      {% else %}
+        Tests on applications you own, plus cases assigned to you.
+      {% endif %}
+    </p>
+  </div>
+  {% if can_create %}
+    <a class="btn btn-primary" href="{{ url_for('test_cases.create') }}">Add test case</a>
+  {% endif %}
+</div>
+
+<form class="row g-2 mb-3 filter-bar" method="get" action="{{ url_for('test_cases.index') }}">
+  <div class="col-md-10 col-sm-9">
+    <label class="visually-hidden" for="q">Search tests</label>
+    <input class="form-control" id="q" name="q" type="search" value="{{ q|default('') }}"
+           placeholder="Search by test name, category or application">
+  </div>
+  <div class="col-md-2 col-sm-3 d-flex gap-2">
+    <button class="btn btn-primary flex-fill" type="submit">Search</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('test_cases.index') }}" title="Clear search">Reset</a>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Test</th>
+          <th>Application</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Assigned to</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for test in test_cases %}
+          {% set is_owner = current_user.is_admin or test.application.owner_id == current_user.id %}
+          <tr>
+            <td><a href="{{ url_for('test_cases.detail', test_id=test.id) }}">{{ test.test_name }}</a></td>
+            <td>
+              <a href="{{ url_for('applications.detail', app_id=test.app_id) }}">{{ test.application.name }}</a>
+            </td>
+            <td>{{ test.category }}</td>
+            <td>{{ status_badge(test.status) }}</td>
+            <td>{{ test.assignee.username if test.assignee else '—' }}</td>
+            <td class="text-end">
+              {% if not current_user.is_client and (is_owner or test.assigned_to == current_user.id) %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('test_cases.edit', test_id=test.id) }}">
+                  {{ 'Update status' if test.assigned_to == current_user.id and not is_owner else 'Edit' }}
+                </a>
+              {% endif %}
+              {% if is_owner and not current_user.is_client %}
+                <form class="d-inline" method="post" action="{{ url_for('test_cases.delete', test_id=test.id) }}"
+                      onsubmit="return confirm('Delete this test case?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="text-muted">No test cases found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-body">
+    {{ pagination_footer(pagination, 'test_cases.index') }}
+  </div>
+</div>
+{% endblock %}

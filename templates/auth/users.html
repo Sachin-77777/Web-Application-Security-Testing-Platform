@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">User management</h1>
+<p class="text-muted">Admin-only directory of platform accounts.</p>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body py-3">
+    <div class="row g-2 small">
+      <div class="col-md-4"><strong>admin</strong> — full access to everything.</div>
+      <div class="col-md-4"><strong>user</strong> — security team: owns applications and records tests and findings.</div>
+      <div class="col-md-4"><strong>client</strong> — submits applications and downloads reports (read-only on findings).</div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for account in users %}
+          <tr>
+            <td>{{ account.id }}</td>
+            <td>
+              {{ account.username }}
+              {% if account.id == current_user.id %}
+                <span class="badge text-bg-secondary">you</span>
+              {% endif %}
+            </td>
+            <td>{{ account.email }}</td>
+            <td>
+              <form class="d-flex gap-2" method="post"
+                    action="{{ url_for('auth.update_role', user_id=account.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label class="visually-hidden" for="role-{{ account.id }}">Role for {{ account.username }}</label>
+                <select class="form-select form-select-sm" id="role-{{ account.id }}" name="role">
+                  {% for role in roles %}
+                    <option value="{{ role }}"{% if role == account.role %} selected{% endif %}>{{ role }}</option>
+                  {% endfor %}
+                </select>
+                <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+              </form>
+            </td>
+            <td>{{ account.created_at }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="text-muted">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

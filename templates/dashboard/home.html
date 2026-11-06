@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "dashboard/_macros.html" import score_badge %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Dashboard</h1>
+    <p class="text-muted mb-0">
+      {% if current_user.is_admin %}
+        Administrator view of all applications, tests, and findings.
+      {% elif current_user.is_client %}
+        Submit an application for testing and download the security report once it is ready.
+      {% else %}
+        Your applications and assigned security tests.
+      {% endif %}
+    </p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('applications.create') }}">Add application</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Applications</div>
+        <div class="fs-3 fw-semibold">{{ applications|length }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Test cases</div>
+        <div class="fs-3 fw-semibold">{{ test_cases|length }}</div>
+        <div class="small text-danger">{{ failed_tests }} failed</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Vulnerabilities</div>
+        <div class="fs-3 fw-semibold">{{ vulnerabilities|length }}</div>
+        <div class="small text-warning">{{ open_vulns }} open</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">CVSS Critical / High</div>
+        <div class="fs-3 fw-semibold">{{ severity_counts.Critical + severity_counts.High }}</div>
+        <div class="small text-muted">{{ severity_counts.Medium }} medium · {{ severity_counts.Low }} low</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between">
+        <strong>Recent applications</strong>
+        <a href="{{ url_for('applications.index') }}">View all</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>Name</th><th>Target</th><th>Score</th>{% if current_user.is_admin %}<th>Owner</th>{% endif %}</tr>
+          </thead>
+          <tbody>
+            {% for app in applications[:8] %}
+              <tr>
+                <td><a href="{{ url_for('applications.detail', app_id=app.id) }}">{{ app.name }}</a></td>
+                <td class="text-truncate" style="max-width: 220px;">{{ app.target_url }}</td>
+                <td>{{ score_badge(app) }}</td>
+                {% if current_user.is_admin %}<td>{{ app.owner.username }}</td>{% endif %}
+              </tr>
+            {% else %}
+              <tr><td colspan="4" class="text-muted">No applications yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between">
+        <strong>Latest reports</strong>
+        <a href="{{ url_for('reports.index') }}">View all</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for report in reports %}
+          <li class="list-group-item d-flex justify-content-between">
+            <a href="{{ url_for('reports.detail', report_id=report.id) }}">{{ report.application.name }}</a>
+            <span class="text-muted small">{{ report.created_at }}</span>
+          </li>
+        {% else %}
+          <li class="list-group-item text-muted">No reports generated yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

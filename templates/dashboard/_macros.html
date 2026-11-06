@@ -1,0 +1,65 @@
+{% macro severity_badge(level) -%}
+  <span class="badge text-white badge-severity-{{ level }}">{{ level }}</span>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+  {% set map = {
+    'Pending': 'secondary',
+    'Passed': 'success',
+    'Failed': 'danger',
+    'Open': 'warning',
+    'Fixed': 'success'
+  } %}
+  <span class="badge text-bg-{{ map.get(status, 'secondary') }}">{{ status }}</span>
+{%- endmacro %}
+
+{% macro score_badge(application) -%}
+  {% set score, grade, verdict = application_score(application) %}
+  {% if score is none %}
+    <span class="badge text-bg-secondary" title="No tests have been conducted yet">{{ verdict }}</span>
+  {% else %}
+    {% set tone = {'A': 'success', 'B': 'info', 'C': 'warning', 'D': 'danger', 'F': 'danger'}.get(grade, 'secondary') %}
+    <span class="badge text-bg-{{ tone }}" title="{{ verdict }}">{{ score }} · {{ grade }}</span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro empty_row(cols, message) -%}
+  <tr><td colspan="{{ cols }}" class="text-muted">{{ message }}</td></tr>
+{%- endmacro %}
+
+{% macro render_pagination(page_obj, endpoint) -%}
+  {% if page_obj.pages > 1 %}
+    {% set args = request.args.to_dict() %}
+    {% set _ignored = args.pop('page', None) %}
+    <nav aria-label="Pagination">
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {{ 'disabled' if not page_obj.has_prev }}">
+          <a class="page-link"
+             href="{{ url_for(endpoint, page=page_obj.prev_num, **args) if page_obj.has_prev else '#' }}">Previous</a>
+        </li>
+        {% for p in page_obj.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            <li class="page-item {{ 'active' if p == page_obj.page }}">
+              <a class="page-link" href="{{ url_for(endpoint, page=p, **args) }}">{{ p }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not page_obj.has_next }}">
+          <a class="page-link"
+             href="{{ url_for(endpoint, page=page_obj.next_num, **args) if page_obj.has_next else '#' }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  {% endif %}
+{%- endmacro %}
+
+{% macro pagination_footer(page_obj, endpoint) -%}
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span class="text-muted small">
+      {% if page_obj.pages %}Page {{ page_obj.page }} of {{ page_obj.pages }} &middot; {% endif %}{{ page_obj.total }} record(s)
+    </span>
+    {{ render_pagination(page_obj, endpoint) }}
+  </div>
+{%- endmacro %}

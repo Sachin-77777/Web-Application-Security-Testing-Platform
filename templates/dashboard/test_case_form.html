@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit test case' if test_case else 'Add test case' }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('test_cases.index') }}">&larr; Test cases</a>
+</div>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{ 'Edit test case' if test_case else 'Add test case' }}</h1>
+    {% if status_only %}
+      <p class="text-muted">You are assigned this procedure. You can update its pass/fail status.</p>
+    {% endif %}
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="mb-3">
+        <label class="form-label" for="app_id">Application</label>
+        <select class="form-select" id="app_id" name="app_id" required {% if status_only %}disabled{% endif %}>
+          {% for app in applications %}
+            <option value="{{ app.id }}"
+              {% if app.id == (app_id|default(test_case.app_id if test_case else none)) %}selected{% endif %}>
+              {{ app.name }}
+            </option>
+          {% endfor %}
+        </select>
+        {% if status_only %}
+          <input type="hidden" name="app_id" value="{{ test_case.app_id }}">
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="test_name">Test name</label>
+        <input class="form-control" id="test_name" name="test_name" required maxlength="200"
+               {% if status_only %}disabled{% endif %}
+               value="{{ test_name|default(test_case.test_name if test_case else '') }}">
+        {% if status_only %}
+          <input type="hidden" name="test_name" value="{{ test_case.test_name }}">
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="category">Category</label>
+        <select class="form-select" id="category" name="category" required {% if status_only %}disabled{% endif %}>
+          {% for item in categories %}
+            <option value="{{ item }}"
+              {% if item == (category|default(test_case.category if test_case else none)) %}selected{% endif %}>
+              {{ item }}
+            </option>
+          {% endfor %}
+        </select>
+        {% if status_only %}
+          <input type="hidden" name="category" value="{{ test_case.category }}">
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="status">Status</label>
+        <select class="form-select" id="status" name="status" required>
+          {% for item in statuses %}
+            <option value="{{ item }}"
+              {% if item == (status|default(test_case.status if test_case else 'Pending')) %}selected{% endif %}>
+              {{ item }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="assigned_to">Assigned to</label>
+        <select class="form-select" id="assigned_to" name="assigned_to" {% if status_only %}disabled{% endif %}>
+          <option value="">Unassigned</option>
+          {% for user in assignees %}
+            <option value="{{ user.id }}"
+              {% if user.id == (assigned_to|default(test_case.assigned_to if test_case else none)) %}selected{% endif %}>
+              {{ user.username }}{% if user.is_admin %} (admin){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+        {% if status_only %}
+          <input type="hidden" name="assigned_to" value="{{ test_case.assigned_to or '' }}">
+        {% endif %}
+      </div>
+
+      <button class="btn btn-primary" type="submit">{{ 'Save changes' if test_case else 'Create test case' }}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

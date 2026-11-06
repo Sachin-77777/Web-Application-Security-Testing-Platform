@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "dashboard/_macros.html" import status_badge %}
+{% block title %}{{ test_case.test_name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <a href="{{ url_for('test_cases.index') }}">&larr; Test cases</a>
+    <h1 class="h3 mt-2 mb-1">{{ test_case.test_name }}</h1>
+    <p class="text-muted mb-0">
+      Procedure for
+      <a href="{{ url_for('applications.detail', app_id=test_case.app_id) }}">{{ test_case.application.name }}</a>
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if can_edit %}
+      <a class="btn btn-outline-secondary" href="{{ url_for('test_cases.edit', test_id=test_case.id) }}">
+        {{ 'Update status' if not can_manage else 'Edit' }}
+      </a>
+    {% endif %}
+    {% if can_manage %}
+      <form method="post" action="{{ url_for('test_cases.delete', test_id=test_case.id) }}"
+            onsubmit="return confirm('Delete this test case?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline-danger" type="submit">Delete</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Category</dt>
+      <dd class="col-sm-9">{{ test_case.category }}</dd>
+      <dt class="col-sm-3">Status</dt>
+      <dd class="col-sm-9">{{ status_badge(test_case.status) }}</dd>
+      <dt class="col-sm-3">Assigned to</dt>
+      <dd class="col-sm-9">{{ test_case.assignee.username if test_case.assignee else 'Unassigned' }}</dd>
+      {% if current_user.is_admin %}
+        <dt class="col-sm-3">Application owner</dt>
+        <dd class="col-sm-9">{{ test_case.application.owner.username }}</dd>
+      {% endif %}
+    </dl>
+  </div>
+</div>
+{% endblock %}

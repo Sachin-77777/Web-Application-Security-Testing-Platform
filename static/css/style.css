@@ -1,0 +1,238 @@
+.navbar-brand {
+  letter-spacing: 0.06em;
+}
+
+.auth-card {
+  max-width: 440px;
+}
+
+.table td .btn,
+.table td form {
+  white-space: nowrap;
+}
+
+.table th {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #475569;
+  background-color: #f8fafc;
+  vertical-align: middle;
+}
+
+.vuln-table th:nth-child(1), .vuln-table td:nth-child(1) { width: 30%; } /* Title */
+.vuln-table th:nth-child(2), .vuln-table td:nth-child(2) { width: 20%; } /* Application */
+.vuln-table th:nth-child(3), .vuln-table td:nth-child(3) { width: 10%; } /* Severity */
+.vuln-table th:nth-child(4), .vuln-table td:nth-child(4) { width: 10%; } /* CVSS */
+.vuln-table th:nth-child(5), .vuln-table td:nth-child(5) { width: 15%; } /* OWASP / CWE */
+.vuln-table th:nth-child(6), .vuln-table td:nth-child(6) { width: 10%; } /* Status */
+.vuln-table th:nth-child(7), .vuln-table td:nth-child(7) { width: 1%; }  /* Actions: shrink to fit the buttons */
+
+.table-hover tbody tr:hover {
+  background-color: rgba(79, 70, 229, 0.04);
+}
+
+/* Filter bars sit on one line: controls line up along their bottom edge and
+   never force their column wider than the Bootstrap grid allows. */
+.filter-bar {
+  align-items: end;
+}
+
+.filter-bar .form-select,
+.filter-bar .form-control {
+  min-width: 0;
+}
+
+.badge-severity-Critical { background-color: #7f1d1d; }
+.badge-severity-High { background-color: #b91c1c; }
+.badge-severity-Medium { background-color: #b45309; }
+.badge-severity-Low { background-color: #15803d; }
+
+/* ------------------------------------------------------------------
+   Sign-in / Register Page (Modern Redesign)
+   ------------------------------------------------------------------ */
+
+.auth-body {
+  background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* The card is centred in the space under the (hidden) navbar. Column direction
+   keeps any flashed alert stacked above the card instead of sitting beside it
+   and squeezing the card below the lg breakpoint. */
+.auth-body main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-body::before, .auth-body::after {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1));
+  filter: blur(80px);
+  z-index: 0;
+  animation: float 20s infinite alternate;
+}
+
+.auth-body::before {
+  top: -100px;
+  left: -100px;
+}
+
+.auth-body::after {
+  bottom: -100px;
+  right: -100px;
+  animation-delay: -10s;
+}
+
+@keyframes float {
+  from { transform: translate(0, 0); }
+  to { transform: translate(100px, 100px); }
+}
+
+.auth-shell {
+  z-index: 1;
+  max-width: 900px;
+  width: 95%;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: auth-fade-in 0.6s ease-out;
+}
+
+@keyframes auth-fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-brand {
+  position: relative;
+  padding: 3rem;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.8), rgba(124, 58, 237, 0.8));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-brand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.auth-brand > * {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.auth-mark-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.auth-form {
+  padding: 3rem;
+  background: #fff;
+}
+
+.auth-eyebrow {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.auth-input {
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.auth-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  outline: none;
+}
+
+.auth-field {
+  position: relative;
+}
+
+.auth-field-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.auth-input-with-icon {
+  padding-left: 2.75rem;
+}
+
+.btn-auth {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  border: none;
+  padding: 0.85rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.btn-auth:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+  filter: brightness(1.1);
+  color: #fff;
+}
+
+.auth-link a {
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-link a:hover {
+  text-decoration: underline;
+}
+
+/* ------------------------------------------------------------------
+   Dashboard / General
+   ------------------------------------------------------------------ */

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from "dashboard/_macros.html" import pagination_footer, score_badge %}
+{% block title %}Applications{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">Applications</h1>
+    <p class="text-muted mb-0">
+      {% if current_user.is_admin %}All target applications on the platform.{% else %}Applications you own or are assigned to test.{% endif %}
+    </p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('applications.create') }}">Add application</a>
+</div>
+
+<form class="row g-2 mb-3 filter-bar" method="get" action="{{ url_for('applications.index') }}">
+  <div class="col-md-10 col-sm-9">
+    <label class="visually-hidden" for="q">Search applications</label>
+    <input class="form-control" id="q" name="q" type="search" value="{{ q|default('') }}"
+           placeholder="Search by name, URL, or description">
+  </div>
+  <div class="col-md-2 col-sm-3 d-flex gap-2">
+    <button class="btn btn-primary flex-fill" type="submit">Search</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('applications.index') }}" title="Clear search">Reset</a>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Target URL</th>
+          <th>Score</th>
+          {% if current_user.is_admin %}<th>Owner</th>{% endif %}
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in applications %}
+          <tr>
+            <td><a href="{{ url_for('applications.detail', app_id=app.id) }}">{{ app.name }}</a></td>
+            <td class="text-break">{{ app.target_url }}</td>
+            <td>{{ score_badge(app) }}</td>
+            {% if current_user.is_admin %}<td>{{ app.owner.username }}</td>{% endif %}
+            <td>{{ app.created_at }}</td>
+            <td class="text-end">
+              {% if current_user.is_admin or app.owner_id == current_user.id %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('applications.edit', app_id=app.id) }}">Edit</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="text-muted">No applications found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-body">
+    {{ pagination_footer(pagination, 'applications.index') }}
+  </div>
+</div>
+{% endblock %}

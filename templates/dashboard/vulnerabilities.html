@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% from "dashboard/_macros.html" import severity_badge, status_badge, pagination_footer %}
+{% block title %}Vulnerabilities{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">Vulnerability tracker</h1>
+    <p class="text-muted mb-0">
+      {% if current_user.is_admin %}
+        All findings with CVSS qualitative severity and remediation status.
+      {% elif current_user.is_client %}
+        Read-only findings for the applications you submitted.
+      {% else %}
+        Findings on applications you own or are assigned to test.
+      {% endif %}
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    {% set export_args = request.args.to_dict() %}
+    {% set _ignored = export_args.pop('page', None) %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('vulnerabilities.export_csv', **export_args) }}">Download CSV</a>
+    {% if can_create %}
+      <a class="btn btn-primary" href="{{ url_for('vulnerabilities.create') }}">Log vulnerability</a>
+    {% endif %}
+  </div>
+</div>
+
+<form class="row g-2 mb-3 filter-bar" method="get" action="{{ url_for('vulnerabilities.index') }}">
+  <div class="col-md-3 col-sm-6">
+    <label class="visually-hidden" for="q">Search findings</label>
+    <input class="form-control" id="q" name="q" type="search" value="{{ q|default('') }}"
+           placeholder="Search by title or description">
+  </div>
+  <div class="col-md-2 col-sm-6">
+    <label class="visually-hidden" for="severity">Severity</label>
+    <select class="form-select" id="severity" name="severity">
+      <option value="">All severities</option>
+      {% for level in severities %}
+        <option value="{{ level }}" {% if level == selected_severity %}selected{% endif %}>{{ level }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2 col-sm-6">
+    <label class="visually-hidden" for="status">Status</label>
+    <select class="form-select" id="status" name="status">
+      <option value="">All statuses</option>
+      {% for item in statuses %}
+        <option value="{{ item }}" {% if item == selected_status %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <label class="visually-hidden" for="owasp">OWASP category</label>
+    <select class="form-select" id="owasp" name="owasp">
+      <option value="">All OWASP categories</option>
+      {% for option in owasp_options %}
+        <option value="{{ option }}" {% if option == selected_owasp %}selected{% endif %}>{{ option }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2 col-sm-12 d-flex gap-2">
+    <button class="btn btn-primary flex-fill" type="submit">Filter</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('vulnerabilities.index') }}" title="Clear filters">Reset</a>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 vuln-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Application</th>
+          <th>Severity</th>
+          <th>CVSS</th>
+          <th>OWASP / CWE</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vuln in vulnerabilities %}
+          <tr>
+            <td><a href="{{ url_for('vulnerabilities.detail', vuln_id=vuln.id) }}">{{ vuln.title }}</a></td>
+            <td>
+              <a href="{{ url_for('applications.detail', app_id=vuln.app_id) }}">{{ vuln.application.name }}</a>
+            </td>
+            <td>{{ severity_badge(vuln.severity) }}</td>
+            <td>{{ vuln.cvss_score if vuln.cvss_score is not none else '—' }}</td>
+            <td class="small">
+              {% if vuln.owasp_category %}<div>{{ vuln.owasp_category.split(':')[0] }}</div>{% endif %}
+              {% if vuln.cwe_id %}<div class="text-muted">{{ vuln.cwe_id }}</div>{% endif %}
+              {% if not vuln.owasp_category and not vuln.cwe_id %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td>{{ status_badge(vuln.status) }}</td>
+            <td class="text-end">
+              {% if not current_user.is_client and (current_user.is_admin or vuln.application.owner_id == current_user.id) %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('vulnerabilities.edit', vuln_id=vuln.id) }}">Edit</a>
+                <form class="d-inline" method="post" action="{{ url_for('vulnerabilities.delete', vuln_id=vuln.id) }}"
+                      onsubmit="return confirm('Delete this vulnerability?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                </form>
+              {% else %}
+                <span class="text-muted small">View only</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="text-muted">No vulnerabilities logged.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-body">
+    {{ pagination_footer(pagination, 'vulnerabilities.index') }}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "dashboard/_macros.html" import severity_badge, status_badge %}
+{% block title %}{{ application.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <a href="{{ url_for('applications.index') }}">&larr; Applications</a>
+    <h1 class="h3 mt-2 mb-1">{{ application.name }}</h1>
+    <p class="text-muted mb-0">
+      {{ application.target_url }}
+      {% if current_user.is_admin %} · Owner: {{ application.owner.username }}{% endif %}
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if can_manage %}
+      <a class="btn btn-outline-secondary" href="{{ url_for('applications.edit', app_id=application.id) }}">Edit</a>
+      <form method="post" action="{{ url_for('applications.delete', app_id=application.id) }}"
+            onsubmit="return confirm('Delete this application and its tests, vulnerabilities, and reports?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline-danger" type="submit">Delete</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if application.description %}
+  {# User text is escaped by Jinja2 auto-escaping. Do not add |safe here. #}
+  <div class="card shadow-sm mb-4"><div class="card-body">{{ application.description }}</div></div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h2 class="h5 mb-0">Test procedures</h2>
+  {% if can_test %}
+    <a class="btn btn-sm btn-primary" href="{{ url_for('test_cases.create', app_id=application.id) }}">Add test case</a>
+  {% endif %}
+</div>
+<div class="card shadow-sm mb-4">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>Name</th><th>Category</th><th>Status</th><th>Assigned</th></tr>
+      </thead>
+      <tbody>
+        {% for test in application.test_cases %}
+          <tr>
+            <td><a href="{{ url_for('test_cases.detail', test_id=test.id) }}">{{ test.test_name }}</a></td>
+            <td>{{ test.category }}</td>
+            <td>{{ status_badge(test.status) }}</td>
+            <td>{{ test.assignee.username if test.assignee else '—' }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-muted">No test cases yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h2 class="h5 mb-0">Vulnerabilities</h2>
+  {% if can_test %}
+    <a class="btn btn-sm btn-primary" href="{{ url_for('vulnerabilities.create', app_id=application.id) }}">Log finding</a>
+  {% endif %}
+</div>
+<div class="card shadow-sm mb-4">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>Title</th><th>Severity</th><th>CVSS</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for vuln in application.vulnerabilities %}
+          <tr>
+            <td><a href="{{ url_for('vulnerabilities.detail', vuln_id=vuln.id) }}">{{ vuln.title }}</a></td>
+            <td>{{ severity_badge(vuln.severity) }}</td>
+            <td>{{ vuln.cvss_score if vuln.cvss_score is not none else '—' }}</td>
+            <td>{{ status_badge(vuln.status) }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-muted">No vulnerabilities logged.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if can_manage %}
+  <form method="post" action="{{ url_for('reports.generate') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="app_id" value="{{ application.id }}">
+    <button class="btn btn-outline-primary" type="submit">Generate summary report</button>
+  </form>
+{% endif %}
+{% endblock %}

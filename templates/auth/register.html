@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="card border-0 auth-shell mx-auto shadow-lg">
+  <div class="row g-0">
+
+    <div class="col-lg-6 auth-brand d-none d-lg-flex flex-column justify-content-between">
+      <div class="auth-mark mb-5">
+        <span class="auth-mark-badge me-2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6l7-3Z"/>
+            <path d="M9.2 12.2l2 2 3.6-4"/>
+          </svg>
+        </span>
+        <span class="h4 fw-bold mb-0">WASTP</span>
+      </div>
+
+      <div class="py-4">
+        <h2 class="display-6 fw-bold mb-3">Join the platform.</h2>
+        <p class="h5 opacity-75 mb-4">New accounts start with the Client role. Submit your application for security testing.</p>
+
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-white bg-opacity-10 p-2 rounded-3 me-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <span>Submit applications for testing.</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-white bg-opacity-10 p-2 rounded-3 me-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <span>Track testing progress in real-time.</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-white bg-opacity-10 p-2 rounded-3 me-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <span>Download comprehensive security reports.</span>
+        </div>
+      </div>
+
+      <p class="small opacity-50 mt-auto">Tester accounts are provisioned by the security team.</p>
+    </div>
+
+    <div class="col-lg-6 bg-white">
+      <div class="auth-form">
+        <span class="auth-eyebrow">New Account</span>
+        <h1 class="h3 fw-bold mb-2">Create an account</h1>
+        <p class="text-muted mb-4">Join our security testing ecosystem.</p>
+
+        <form method="post" action="{{ url_for('auth.register') }}" novalidate
+              data-loading-form data-loading-text="Creating account...">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-medium text-secondary" for="username">Username</label>
+            <div class="auth-field">
+              <svg class="auth-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              <input class="form-control auth-input auth-input-with-icon" id="username" name="username" type="text"
+                     required minlength="3" maxlength="80" pattern="[A-Za-z0-9_]+" value="{{ username|default('') }}"
+                     autocomplete="username">
+            </div>
+            <div class="form-text small">Letters, numbers and underscore only.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-medium text-secondary" for="email">Email</label>
+            <div class="auth-field">
+              <svg class="auth-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input class="form-control auth-input auth-input-with-icon" id="email" name="email" type="email"
+                     required maxlength="255" value="{{ email|default('') }}" autocomplete="email">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-medium text-secondary" for="password">Password</label>
+            <div class="auth-field">
+              <svg class="auth-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input class="form-control auth-input auth-input-with-icon" id="password" name="password" type="password"
+                     required minlength="8" autocomplete="new-password" data-caps-watch>
+              <button class="btn border-0 position-absolute end-0 top-50 translate-middle-y me-2 text-muted"
+                      type="button" data-password-toggle="password" title="Show password">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <div class="form-text small">
+              At least 8 characters with an uppercase letter, a number and a special character.
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-medium text-secondary" for="confirm_password">Confirm Password</label>
+            <div class="auth-field">
+              <svg class="auth-field-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <input class="form-control auth-input auth-input-with-icon" id="confirm_password" name="confirm_password"
+                     type="password" required minlength="8" autocomplete="new-password" data-caps-watch>
+            </div>
+          </div>
+
+          <button class="btn btn-auth w-100 mb-3" type="submit" data-loading-button>Create Account</button>
+        </form>
+
+        <p class="text-center auth-link small mb-0">
+          Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/auth.js') }}" defer></script>
+{% endblock %}
