@@ -59,10 +59,12 @@ def application_score(application):
     """Return ``(score, grade, verdict)`` for one application.
 
     Shared by the report, the dashboard and the applications list so the number
-    is always calculated the same way. Returns (None, "N/A", "Pending") if
-    no tests have been recorded yet.
+    is always calculated the same way. Returns (None, "N/A", "Pending") only
+    when the engagement has not started at all - no test cases AND no
+    vulnerabilities have been recorded. As soon as any finding exists the
+    score is meaningful, so it is always computed from the vulnerabilities list.
     """
-    if not application.test_cases:
+    if not application.test_cases and not application.vulnerabilities:
         return None, "N/A", "Pending"
     score = security_score(application.vulnerabilities)
     grade, verdict = grade_from_score(score)
