@@ -47,6 +47,13 @@
                     <option value="{{ role }}"{% if role == account.role %} selected{% endif %}>{{ role }}</option>
                   {% endfor %}
                 </select>
+                 <form method="post"
+                       action="{{ url_for('auth.admin_reset_password', user_id=account.id) }}"
+                       onsubmit="return confirm('Reset password for {{ account.username }}? This will generate a temporary password.')">
+                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                   <button class="btn btn-sm btn-outline-danger ms-2" type="submit">Reset Password</button>
+               </form>
+                 </form>
                 <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
               </form>
             </td>

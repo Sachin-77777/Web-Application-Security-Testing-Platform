@@ -24,7 +24,7 @@ from sqlalchemy import or_
 from constants import USER_ROLES
 from extensions import db, login_manager
 from mailer import send_password_reset_code
-from models import PasswordResetOTP, User, utcnow_naive
+from models import PasswordResetOTP, User, utcnow_naive, AuditLog
 from rate_limit import key_for, locked_seconds, register_failure, reset
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -317,3 +317,32 @@ def update_role(user_id):
     db.session.commit()
     flash(f"{account.username} is now a {role}.", "success")
     return redirect(url_for("auth.users"))
+
+
+@auth_bp.route("/admin/reset-password/<int:user_id>", methods=["POST"])
+@admin_required
+def admin_reset_password(user_id):
+    """Admin endpoint to reset a user's password and send a temporary password."""
+    user = db.session.get(User, user_id)
+    if not user:
+        abort(404, description="User not found.")
+    
+    # Generate a secure temporary password
+    temp_password = secrets.token_urlsafe(12)
+    user.set_password(temp_password)
+    db.session.commit()
+    
+    # Log this admin action
+    log_entry = AuditLog(
+        admin_id=current_user.id,
+        action=f"Admin reset password for user '{user.username}' (ID: {user_id})"
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+    
+    # Return the temp password to the admin (for secure handoff to user)
+    return jsonify({
+        "status": "success",
+        "temp_password": temp_password,
+        "message": "Temporary password generated. The user will be required to change it on next login."
+    })

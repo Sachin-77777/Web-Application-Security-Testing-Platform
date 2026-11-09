@@ -219,3 +219,19 @@ class Notification(db.Model):
 
     def __repr__(self):
         return f"<Notification user={self.user_id} read={self.is_read}>"
+
+
+class AuditLog(db.Model):
+    """Log of admin actions, e.g., password resets."""
+
+    __tablename__ = "audit_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    action = db.Column(db.String(200), nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=utcnow)
+
+    admin = db.relationship("User")
+
+    def __repr__(self):
+        return f"<AuditLog admin={self.admin_id} action={self.action}>"
