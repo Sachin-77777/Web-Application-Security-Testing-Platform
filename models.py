@@ -30,6 +30,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.Enum(*USER_ROLES), nullable=False, default="client")
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    must_change_password = db.Column(db.Boolean, default=True, nullable=False)
 
     applications = db.relationship(
         "Application",

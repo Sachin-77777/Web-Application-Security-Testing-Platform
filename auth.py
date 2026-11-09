@@ -177,6 +177,12 @@ def login():
 
         reset(attempt_key)
         login_user(user, remember=remember)
+        
+        # If user must change password (after admin reset), redirect to change page
+        if user.must_change_password:
+            flash("You must change your temporary password before proceeding.", "warning")
+            return redirect(url_for("auth.change_password"))
+        
         flash(f"Welcome back, {user.username}.", "success")
         next_url = request.args.get("next")
         if next_url and next_url.startswith("/") and not next_url.startswith("//"):
@@ -282,6 +288,39 @@ def reset_password():
     return render_template("auth/reset_password.html", email=email)
 
 
+@auth_bp.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    """Allow logged-in users to change their password (force after admin reset)."""
+    if request.method == "POST":
+        current_password = request.form.get("current_password") or ""
+        new_password = request.form.get("new_password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+
+        # Validate inputs
+        errors = []
+        if not current_user.check_password(current_password):
+            errors.append("Current password is incorrect.")
+        if new_password != confirm_password:
+            errors.append("New password confirmation does not match.")
+        errors.extend(password_policy_errors(new_password))
+
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return render_template("auth/change_password.html")
+
+        # Update password and mark as not needing change
+        current_user.set_password(new_password)
+        current_user.must_change_password = False
+        db.session.commit()
+
+        flash("Your password has been updated successfully.", "success")
+        return redirect(url_for("dashboard.home"))
+
+    return render_template("auth/change_password.html")
+
+
 @auth_bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
@@ -327,9 +366,11 @@ def admin_reset_password(user_id):
     if not user:
         abort(404, description="User not found.")
     
-    # Generate a secure temporary password
-    temp_password = secrets.token_urlsafe(12)
+    # Set default password for admin reset (like router default)
+    temp_password = "password123"
     user.set_password(temp_password)
+    # Force user to change password on first login after reset
+    user.must_change_password = True
     db.session.commit()
     
     # Log this admin action
