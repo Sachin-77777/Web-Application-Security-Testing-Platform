@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "dashboard/_macros.html import status_badge" %}
+{% block title %}Review test cases — {{ application.name }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('applications.detail', app_id=application.id) }}">&larr; Back to {{ application.name }}</a>
+</div>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1 class="h4 mb-3">Review test cases</h1>
+    <p class="text-muted mb-3">
+      Mark each procedure as <strong>Passed</strong> or <strong>Failed</strong> and add notes for the client.
+    </p>
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="table-responsive mb-4">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width: 40%">Test name</th>
+              <th>Category</th>
+              <th style="width: 20%">Status</th>
+              <th style="width: 40%">Notes / description for client</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for test in tests %}
+            <tr>
+              <td>
+                <strong>{{ loop.index }}.</strong> {{ test.test_name }}
+                <input type="hidden" name="test_ids" value="{{ test.id }}">
+              </td>
+              <td>{{ test.category }}</td>
+              <td>
+                <select class="form-select form-select-sm" name="status_{{ test.id }}">
+                  {% for item in statuses %}
+                    <option value="{{ item }}"
+                      {% if item == test.status %}selected{% endif %}>
+                      {{ item }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <textarea class="form-control form-control-sm" name="notes_{{ test.id }}" rows="2">{{ test.notes or '' }}</textarea>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted">No test cases yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <button class="btn btn-primary" type="submit">Save all reviews</button>
+      <a class="btn btn-outline-secondary ms-2" href="{{ url_for('applications.detail', app_id=application.id) }}">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -236,6 +236,49 @@ def delete(test_id):
     return redirect(url_for("test_cases.index"))
 
 
+@test_cases_bp.route("/<int:app_id>/review", methods=["GET", "POST"])
+@login_required
+def review(app_id):
+    """Bulk review all test cases for an application.
+
+    Admin/user marks each test Pass/Fail/Pending and adds a description
+    (notes) that is shown to the client on the application page.
+    """
+    application = get_application_or_403(app_id)
+    if not can_conduct_testing(current_user, application):
+        abort(403)
+
+    tests = (
+        TestCase.query.filter_by(app_id=app_id)
+        .order_by(TestCase.id.asc())
+        .all()
+    )
+
+    if request.method == "POST":
+        for test in tests:
+            status_key = f"status_{test.id}"
+            notes_key = f"notes_{test.id}"
+
+            status = request.form.get(status_key)
+            notes = request.form.get(notes_key)
+
+            if status in TEST_STATUSES:
+                test.status = status
+            if notes is not None:
+                test.notes = notes.strip() or None
+
+        db.session.commit()
+        flash(f"Reviewed {len(tests)} test case(s) for {application.name}.", "success")
+        return redirect(url_for("applications.detail", app_id=app_id))
+
+    return render_template(
+        "dashboard/test_case_review.html",
+        application=application,
+        tests=tests,
+        statuses=TEST_STATUSES,
+    )
+
+
 @test_cases_bp.route("/bulk-assign", methods=["POST"])
 @login_required
 def bulk_assign():

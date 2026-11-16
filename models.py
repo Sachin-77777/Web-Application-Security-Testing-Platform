@@ -118,6 +118,7 @@ class TestCase(db.Model):
         default="Pending",
     )
     assigned_to = db.Column(INTEGER(unsigned=True), db.ForeignKey("users.id"), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
 
     application = db.relationship("Application", back_populates="test_cases")
     assignee = db.relationship("User", back_populates="assigned_tests")

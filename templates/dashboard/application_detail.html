@@ -51,24 +51,33 @@
 <div class="card shadow-sm mb-4">
   <div class="table-responsive">
     <table class="table table-hover mb-0">
-      <thead>
-        <tr><th>Name</th><th>Category</th><th>Status</th><th>Assigned</th></tr>
-      </thead>
-      <tbody>
-        {% for test in application.test_cases %}
-          <tr>
-            <td><a href="{{ url_for('test_cases.detail', test_id=test.id) }}">{{ test.test_name }}</a></td>
-            <td>{{ test.category }}</td>
-            <td>{{ status_badge(test.status) }}</td>
-            <td>{{ test.assignee.username if test.assignee else '—' }}</td>
-          </tr>
-        {% else %}
-          <tr><td colspan="4" class="text-muted">No test cases yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+<thead>
+  <tr><th>#</th><th>Name</th><th>Category</th><th>Status</th><th>Notes for client</th><th>Assigned</th></tr>
+</thead>
+<tbody>
+  {% for test in application.test_cases %}
+  <tr>
+    <td>{{ loop.index }}</td>
+    <td><a href="{{ url_for('test_cases.detail', test_id=test.id) }}">{{ test.test_name }}</a></td>
+    <td>{{ test.category }}</td>
+    <td>{{ status_badge(test.status) }}</td>
+    <td>{{ test.notes if test.notes else '—' }}</td>
+    <td>{{ test.assignee.username if test.assignee else '—' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="text-muted">No test cases yet.</td></tr>
+  {% endfor %}
+</tbody>
+</table>
 </div>
+</div>
+
+{% if can_test %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h2 class="h5 mb-0">Review all tests</h2>
+  <a class="btn btn-sm btn-primary" href="{{ url_for('test_cases.review', app_id=application.id) }}">Review test cases</a>
+</div>
+{% endif %}
 
 <div class="d-flex justify-content-between align-items-center mb-2">
   <h2 class="h5 mb-0">Vulnerabilities</h2>

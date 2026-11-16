@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS test_cases (
   category VARCHAR(100) NOT NULL,
   status ENUM('Pending', 'Passed', 'Failed') NOT NULL DEFAULT 'Pending',
   assigned_to INT UNSIGNED DEFAULT NULL,
+  notes TEXT DEFAULT NULL,
   PRIMARY KEY (id),
   KEY ix_test_cases_app_id (app_id),
   KEY ix_test_cases_assigned_to (assigned_to),
