@@ -111,3 +111,31 @@ CREATE TABLE IF NOT EXISTS password_reset_otps (
     ON UPDATE CASCADE
     ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id INT UNSIGNED NOT NULL,
+  message TEXT NOT NULL,
+  link VARCHAR(512) DEFAULT NULL,
+  is_read BOOL NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY ix_notifications_user_id (user_id),
+  CONSTRAINT fk_notifications_user
+    FOREIGN KEY (user_id) REFERENCES users (id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  admin_id INT UNSIGNED NOT NULL,
+  action VARCHAR(200) NOT NULL,
+  timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY ix_audit_logs_admin_id (admin_id),
+  CONSTRAINT fk_audit_logs_admin
+    FOREIGN KEY (admin_id) REFERENCES users (id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

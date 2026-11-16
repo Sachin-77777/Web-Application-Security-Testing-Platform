@@ -47,15 +47,22 @@
                     <option value="{{ role }}"{% if role == account.role %} selected{% endif %}>{{ role }}</option>
                   {% endfor %}
                 </select>
-                 <form method="post"
-                       action="{{ url_for('auth.admin_reset_password', user_id=account.id) }}"
-                       onsubmit="return confirm('Reset password for {{ account.username }}? This will generate a temporary password.')">
-                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                   <button class="btn btn-sm btn-outline-danger ms-2" type="submit">Reset Password</button>
-               </form>
-                 </form>
                 <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
               </form>
+              <form class="d-inline" id="reset-form-{{ account.id }}"
+                    action="{{ url_for('auth.admin_reset_password', user_id=account.id) }}"
+                    onsubmit="return resetPassword(event, '{{ account.username }}')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger ms-2" type="submit">Reset Password</button>
+              </form>
+              {% if account.id != current_user.id %}
+              <form class="d-inline" method="post"
+                    action="{{ url_for('auth.delete_user', user_id=account.id) }}"
+                    onsubmit="return confirm('Delete {{ account.username }}? This cannot be undone. All their applications, test cases, vulnerabilities and reports will be removed.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger ms-2" type="submit">Delete</button>
+              </form>
+              {% endif %}
             </td>
             <td>{{ account.created_at }}</td>
           </tr>
@@ -66,4 +73,36 @@
     </table>
   </div>
 </div>
+
+<script>
+function resetPassword(event, username) {
+  event.preventDefault();
+  if (!confirm("Reset password for " + username + "? This will generate a temporary password.")) {
+    return false;
+  }
+  var form = event.target;
+  var url = form.action;
+  var csrfToken = form.querySelector('input[name="csrf_token"]').value;
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken
+    },
+    body: JSON.stringify({})
+  }).then(function(response) {
+    return response.json();
+  }).then(function(data) {
+    if (data.status === "success") {
+      alert("Temporary password for " + username + ": " + data.temp_password + "\n\n" + data.message);
+      location.reload();
+    } else {
+      alert("Reset failed: " + (data.message || data.error));
+    }
+  }).catch(function() {
+    alert("Reset failed. Please try again.");
+  });
+  return false;
+}
+</script>
 {% endblock %}

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from flask_login import UserMixin
+from sqlalchemy.dialects.mysql import INTEGER
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from constants import USER_ROLES
@@ -24,7 +25,7 @@ def utcnow_naive():
 class User(UserMixin, db.Model):
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(INTEGER(unsigned=True), primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -78,11 +79,11 @@ class User(UserMixin, db.Model):
 class Application(db.Model):
     __tablename__ = "applications"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(INTEGER(unsigned=True), primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     target_url = db.Column(db.String(2048), nullable=False)
     description = db.Column(db.Text)
-    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    owner_id = db.Column(INTEGER(unsigned=True), db.ForeignKey("users.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     owner = db.relationship("User", back_populates="applications")
@@ -107,8 +108,8 @@ class TestCase(db.Model):
     __tablename__ = "test_cases"
     __test__ = False  # Tell pytest this is a data model, not a test class.
 
-    id = db.Column(db.Integer, primary_key=True)
-    app_id = db.Column(db.Integer, db.ForeignKey("applications.id"), nullable=False)
+    id = db.Column(INTEGER(unsigned=True), primary_key=True)
+    app_id = db.Column(INTEGER(unsigned=True), db.ForeignKey("applications.id"), nullable=False)
     test_name = db.Column(db.String(200), nullable=False)
     category = db.Column(db.String(100), nullable=False)
     status = db.Column(
@@ -116,7 +117,7 @@ class TestCase(db.Model):
         nullable=False,
         default="Pending",
     )
-    assigned_to = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    assigned_to = db.Column(INTEGER(unsigned=True), db.ForeignKey("users.id"), nullable=True)
 
     application = db.relationship("Application", back_populates="test_cases")
     assignee = db.relationship("User", back_populates="assigned_tests")
@@ -125,8 +126,8 @@ class TestCase(db.Model):
 class Vulnerability(db.Model):
     __tablename__ = "vulnerabilities"
 
-    id = db.Column(db.Integer, primary_key=True)
-    app_id = db.Column(db.Integer, db.ForeignKey("applications.id"), nullable=False)
+    id = db.Column(INTEGER(unsigned=True), primary_key=True)
+    app_id = db.Column(INTEGER(unsigned=True), db.ForeignKey("applications.id"), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     severity = db.Column(
         db.Enum("Low", "Medium", "High", "Critical"),
@@ -151,9 +152,9 @@ class Vulnerability(db.Model):
 class Report(db.Model):
     __tablename__ = "reports"
 
-    id = db.Column(db.Integer, primary_key=True)
-    app_id = db.Column(db.Integer, db.ForeignKey("applications.id"), nullable=False)
-    generated_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    id = db.Column(INTEGER(unsigned=True), primary_key=True)
+    app_id = db.Column(INTEGER(unsigned=True), db.ForeignKey("applications.id"), nullable=False)
+    generated_by = db.Column(INTEGER(unsigned=True), db.ForeignKey("users.id"), nullable=False)
     report_path = db.Column(db.String(1024), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
@@ -172,8 +173,8 @@ class PasswordResetOTP(db.Model):
 
     __tablename__ = "password_reset_otps"
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    id = db.Column(INTEGER(unsigned=True), primary_key=True)
+    user_id = db.Column(INTEGER(unsigned=True), db.ForeignKey("users.id"), nullable=False)
     code_hash = db.Column(db.String(255), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
     attempts = db.Column(db.Integer, nullable=False, default=0)
@@ -209,8 +210,8 @@ class Notification(db.Model):
 
     __tablename__ = "notifications"
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    id = db.Column(INTEGER(unsigned=True), primary_key=True)
+    user_id = db.Column(INTEGER(unsigned=True), db.ForeignKey("users.id"), nullable=False)
     message = db.Column(db.Text, nullable=False)
     link = db.Column(db.String(512), nullable=True)
     is_read = db.Column(db.Boolean, nullable=False, default=False)
@@ -227,8 +228,8 @@ class AuditLog(db.Model):
 
     __tablename__ = "audit_logs"
 
-    id = db.Column(db.Integer, primary_key=True)
-    admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    id = db.Column(INTEGER(unsigned=True), primary_key=True)
+    admin_id = db.Column(INTEGER(unsigned=True), db.ForeignKey("users.id"), nullable=False)
     action = db.Column(db.String(200), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=utcnow)
 

@@ -24,7 +24,7 @@ from sqlalchemy import or_
 from constants import USER_ROLES
 from extensions import db, login_manager
 from mailer import send_password_reset_code
-from models import PasswordResetOTP, User, utcnow_naive, AuditLog
+from models import PasswordResetOTP, User, utcnow_naive, AuditLog, Report, Application
 from rate_limit import key_for, locked_seconds, register_failure, reset
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -355,6 +355,42 @@ def update_role(user_id):
     account.role = role
     db.session.commit()
     flash(f"{account.username} is now a {role}.", "success")
+    return redirect(url_for("auth.users"))
+
+
+@auth_bp.route("/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def delete_user(user_id):
+    """Delete a user account and all their data. Admin cannot delete themselves."""
+    account = db.session.get(User, user_id)
+    if account is None:
+        abort(404)
+
+    if account.id == current_user.id:
+        flash("You cannot delete your own account.", "error")
+        return redirect(url_for("auth.users"))
+
+    # Remove reports this user generated (may be for apps they do not own,
+    # so the application cascade does not catch them).
+    Report.query.filter_by(generated_by=account.id).delete()
+
+    # Remove audit logs where this user performed the admin action.
+    AuditLog.query.filter_by(admin_id=account.id).delete()
+
+    # Delete applications owned by this user first. Deleting an application
+    # cascades to its test cases, vulnerabilities and reports. Doing this
+    # before deleting the user avoids MySQL trying to set owner_id = NULL
+    # on remaining applications, which is NOT NULL.
+    owned_apps = Application.query.filter_by(owner_id=account.id).all()
+    for application in owned_apps:
+        db.session.delete(application)
+
+    # Delete the user. Cascades remove their password reset codes and
+    # notifications. Test cases assigned to them have assigned_to set to NULL.
+    db.session.delete(account)
+    db.session.commit()
+
+    flash(f"User {account.username} has been deleted.", "success")
     return redirect(url_for("auth.users"))
 
 
