@@ -89,6 +89,7 @@ def create():
         category = form_str("category")
         status = form_str("status") or "Pending"
         assigned_to = form_int("assigned_to")
+        notes = form_str("notes")
         errors, application = _validate(app_id, test_name, category, status, assigned_to)
         if application and not can_conduct_testing(current_user, application):
             errors.append("You cannot add tests to this application.")
@@ -107,6 +108,7 @@ def create():
                 category=category,
                 status=status,
                 assigned_to=assigned_to,
+                notes=notes,
             )
         test_case = TestCase(
             app_id=app_id,
@@ -114,6 +116,7 @@ def create():
             category=category,
             status=status,
             assigned_to=assigned_to,
+            notes=notes,
         )
         db.session.add(test_case)
         db.session.commit()
@@ -163,12 +166,14 @@ def edit(test_id):
         category = form_str("category")
         status = form_str("status") or "Pending"
         assigned_to = form_int("assigned_to")
+        notes = form_str("notes")
         manage = can_conduct_testing(current_user, test_case.application)
         if not manage:
             app_id = test_case.app_id
             test_name = test_case.test_name
             category = test_case.category
             assigned_to = test_case.assigned_to
+            notes = test_case.notes
         errors, _application = _validate(app_id, test_name, category, status, assigned_to)
         if errors:
             for error in errors:
@@ -185,6 +190,7 @@ def edit(test_id):
                 category=category,
                 status=status,
                 assigned_to=assigned_to,
+                notes=notes,
                 status_only=not manage,
             )
         test_case.app_id = app_id
@@ -192,6 +198,7 @@ def edit(test_id):
         test_case.category = category
         test_case.status = status
         test_case.assigned_to = assigned_to
+        test_case.notes = notes
         db.session.commit()
         flash("Test case updated.", "success")
         return redirect(url_for("test_cases.index"))

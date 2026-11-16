@@ -66,6 +66,12 @@
       </div>
 
       <div class="mb-3">
+        <label class="form-label" for="notes">Notes / description for client</label>
+        <textarea class="form-control" id="notes" name="notes" rows="4"
+                  placeholder="Write notes for the client about this test...">{{ notes|default(test_case.notes if test_case else '') }}</textarea>
+      </div>
+
+      <div class="mb-3">
         <label class="form-label" for="assigned_to">Assigned to</label>
         <select class="form-select" id="assigned_to" name="assigned_to" {% if status_only %}disabled{% endif %}>
           <option value="">Unassigned</option>

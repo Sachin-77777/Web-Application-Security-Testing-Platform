@@ -48,7 +48,7 @@
 
   <h2>Test procedures</h2>
   <table>
-    <thead><tr><th>Name</th><th>Category</th><th>Status</th><th>Assigned</th></tr></thead>
+    <thead><tr><th>Name</th><th>Category</th><th>Status</th><th>Assigned</th><th>Notes</th></tr></thead>
     <tbody>
       {% for test in application.test_cases %}
         <tr>
@@ -56,9 +56,10 @@
           <td>{{ test.category }}</td>
           <td>{{ test.status }}</td>
           <td>{{ test.assignee.username if test.assignee else '—' }}</td>
+          <td>{{ test.notes or '—' }}</td>
         </tr>
       {% else %}
-        <tr><td colspan="4">None</td></tr>
+        <tr><td colspan="5">None</td></tr>
       {% endfor %}
     </tbody>
   </table>
