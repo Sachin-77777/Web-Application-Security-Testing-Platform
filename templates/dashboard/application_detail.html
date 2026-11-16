@@ -6,112 +6,129 @@
   <div>
     <a href="{{ url_for('applications.index') }}">&larr; Applications</a>
     <h1 class="h3 mt-2 mb-1">{{ application.name }}</h1>
-    <p class="text-muted mb-0">
-      {{ application.target_url }}
-      {% if current_user.is_admin %} · Owner: {{ application.owner.username }}{% endif %}
-    </p>
+    <p class="text-muted mb-0">{{ application.target_url }}</p>
   </div>
   <div class="d-flex gap-2">
     {% if can_manage %}
       <a class="btn btn-outline-secondary" href="{{ url_for('applications.edit', app_id=application.id) }}">Edit</a>
-      <form method="post" action="{{ url_for('applications.delete', app_id=application.id) }}"
-            data-confirm="Delete this application and its tests, vulnerabilities, and reports?">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="btn btn-outline-danger" type="submit">Delete</button>
-      </form>
+    {% endif %}
+    {% if can_test %}
+      <a class="btn btn-sm btn-primary" href="{{ url_for('test_cases.create', app_id=application.id) }}">Add test case</a>
+      <a class="btn btn-sm btn-primary" href="{{ url_for('test_cases.review', app_id=application.id) }}">Review all tests</a>
     {% endif %}
   </div>
 </div>
 
 {% if application.description %}
-  {# User text is escaped by Jinja2 auto-escaping. Do not add |safe here. #}
   <div class="card shadow-sm mb-4"><div class="card-body">{{ application.description }}</div></div>
 {% endif %}
 
+{# Test cases are the main content when you open an application — like opening a folder to see its contents #}
 <div class="card shadow-sm mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="h6 mb-0"><i class="bi bi-check2-square" aria-hidden="true"></i> Test cases inside {{ application.name }}</span>
+    <span class="badge bg-primary">{{ application.test_cases|length }}</span>
+  </div>
   <div class="card-body">
-    <h2 class="h6 text-muted mb-3"><i class="bi bi-signpost-split" aria-hidden="true"></i> Progress</h2>
-    <ul class="stepper">
-      {% for step in timeline %}
-        <li class="{{ 'done' if step.done }}">
-          {% if step.done %}<i class="bi bi-check-circle-fill" aria-hidden="true"></i>{% endif %}
-          {{ step.label }}
-        </li>
-      {% endfor %}
-    </ul>
+    {% if application.test_cases %}
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        {% for test in application.test_cases %}
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <a href="{{ url_for('test_cases.detail', test_id=test.id) }}" class="text-decoration-none">
+                    <h6 class="card-title mb-1">{{ test.test_name }}</h6>
+                  </a>
+                  <span class="badge bg-secondary">{{ test.category }}</span>
+                </div>
+                {{ status_badge(test.status) }}
+              </div>
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="bi bi-person" aria-hidden="true"></i>
+                  {{ test.assignee.username if test.assignee else 'Unassigned' }}
+                </small>
+              </div>
+              {% if test.notes %}
+              <div class="mt-auto p-3 bg-light rounded">
+                <small class="text-muted d-block mb-1">Notes for client:</small>
+                <small>{{ test.notes }}</small>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-4 text-muted">
+        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+        <p class="mt-2 mb-0">No test cases in this application yet.</p>
+      </div>
+    {% endif %}
   </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-  <h2 class="h5 mb-0">Test procedures</h2>
-  {% if can_test %}
-    <a class="btn btn-sm btn-primary" href="{{ url_for('test_cases.create', app_id=application.id) }}">Add test case</a>
-  {% endif %}
-</div>
+{# Vulnerabilities — secondary, collapsible #}
+{% if application.vulnerabilities or can_test %}
 <div class="card shadow-sm mb-4">
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
-<thead>
-  <tr><th>#</th><th>Name</th><th>Category</th><th>Status</th><th>Notes for client</th><th>Assigned</th></tr>
-</thead>
-<tbody>
-  {% for test in application.test_cases %}
-  <tr>
-    <td>{{ loop.index }}</td>
-    <td><a href="{{ url_for('test_cases.detail', test_id=test.id) }}">{{ test.test_name }}</a></td>
-    <td>{{ test.category }}</td>
-    <td>{{ status_badge(test.status) }}</td>
-    <td>{{ test.notes if test.notes else '—' }}</td>
-    <td>{{ test.assignee.username if test.assignee else '—' }}</td>
-  </tr>
-  {% else %}
-  <tr><td colspan="6" class="text-muted">No test cases yet.</td></tr>
-  {% endfor %}
-</tbody>
-</table>
-</div>
-</div>
-
-{% if can_test %}
-<div class="d-flex justify-content-between align-items-center mb-2">
-  <h2 class="h5 mb-0">Review all tests</h2>
-  <a class="btn btn-sm btn-primary" href="{{ url_for('test_cases.review', app_id=application.id) }}">Review test cases</a>
+  <div class="card-header">
+    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="collapse" data-bs-target="#vulnsCollapse"
+            aria-expanded="false" aria-controls="vulnsCollapse">
+      <i class="bi bi-bug" aria-hidden="true"></i> Vulnerabilities ({{ application.vulnerabilities|length }})
+    </button>
+  </div>
+  <div class="collapse" id="vulnsCollapse">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead>
+            <tr><th>Title</th><th>Severity</th><th>CVSS</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for vuln in application.vulnerabilities %}
+            <tr>
+              <td><a href="{{ url_for('vulnerabilities.detail', vuln_id=vuln.id) }}">{{ vuln.title }}</a></td>
+              <td>{{ severity_badge(vuln.severity) }}</td>
+              <td>{{ vuln.cvss_score if vuln.cvss_score is not none else '—' }}</td>
+              <td>{{ status_badge(vuln.status) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted">No vulnerabilities logged.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if can_test %}
+      <div class="mt-3">
+        <a class="btn btn-sm btn-primary" href="{{ url_for('vulnerabilities.create', app_id=application.id) }}">Log finding</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endif %}
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-  <h2 class="h5 mb-0">Vulnerabilities</h2>
-  {% if can_test %}
-    <a class="btn btn-sm btn-primary" href="{{ url_for('vulnerabilities.create', app_id=application.id) }}">Log finding</a>
-  {% endif %}
-</div>
-<div class="card shadow-sm mb-4">
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
-      <thead>
-        <tr><th>Title</th><th>Severity</th><th>CVSS</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        {% for vuln in application.vulnerabilities %}
-          <tr>
-            <td><a href="{{ url_for('vulnerabilities.detail', vuln_id=vuln.id) }}">{{ vuln.title }}</a></td>
-            <td>{{ severity_badge(vuln.severity) }}</td>
-            <td>{{ vuln.cvss_score if vuln.cvss_score is not none else '—' }}</td>
-            <td>{{ status_badge(vuln.status) }}</td>
-          </tr>
-        {% else %}
-          <tr><td colspan="4" class="text-muted">No vulnerabilities logged.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+{# Reports — secondary, collapsible #}
+{% if can_manage %}
+<div class="card shadow-sm">
+  <div class="card-header">
+    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="collapse" data-bs-target="#reportsCollapse"
+            aria-expanded="false" aria-controls="reportsCollapse">
+      <i class="bi bi-file-earmark-text" aria-hidden="true"></i> Reports
+    </button>
+  </div>
+  <div class="collapse" id="reportsCollapse">
+    <div class="card-body">
+      <form method="post" action="{{ url_for('reports.generate') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="app_id" value="{{ application.id }}">
+        <button class="btn btn-outline-primary" type="submit">Generate summary report</button>
+      </form>
+    </div>
   </div>
 </div>
-
-{% if can_manage %}
-  <form method="post" action="{{ url_for('reports.generate') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="app_id" value="{{ application.id }}">
-    <button class="btn btn-outline-primary" type="submit">Generate summary report</button>
-  </form>
 {% endif %}
 {% endblock %}
