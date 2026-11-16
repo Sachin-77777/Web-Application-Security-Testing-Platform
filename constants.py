@@ -70,18 +70,21 @@ SCORE_GRADES = (
 )
 
 
-def security_score(vulnerabilities):
+def security_score(vulnerabilities, test_cases=None):
     """Return a 0-100 score for an application (higher is safer).
 
     Every finding still marked ``Open`` subtracts its ``SEVERITY_WEIGHTS``
-    value, so fixing a finding immediately improves the score. The result is
-    clamped so a very vulnerable application never goes below 0.
+    value, so fixing a finding immediately improves the score.
+    Every failed test case subtracts 5 points.
+    The result is clamped so a very vulnerable application never goes below 0.
     """
     penalty = sum(
         SEVERITY_WEIGHTS.get(item.severity, 0)
         for item in vulnerabilities
         if item.status != "Fixed"
     )
+    if test_cases:
+        penalty += sum(5 for item in test_cases if item.status == "Failed")
     return max(0, 100 - penalty)
 
 

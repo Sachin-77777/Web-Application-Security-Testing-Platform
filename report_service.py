@@ -66,7 +66,7 @@ def application_score(application):
     """
     if not application.test_cases and not application.vulnerabilities:
         return None, "N/A", "Pending"
-    score = security_score(application.vulnerabilities)
+    score = security_score(application.vulnerabilities, application.test_cases)
     grade, verdict = grade_from_score(score)
     return score, grade, verdict
 
