@@ -62,11 +62,12 @@ def severity_from_cvss(score):
 SEVERITY_WEIGHTS = {"Critical": 25, "High": 10, "Medium": 4, "Low": 1}
 
 SCORE_GRADES = (
-    (90, "A", "Strong"),
-    (75, "B", "Good"),
-    (60, "C", "Fair"),
-    (40, "D", "Weak"),
-    (0, "F", "Critical risk"),
+    (90, "A", "Strong", "text-success"),
+    (80, "B", "Semi-Strong", "text-dark-green"),
+    (70, "C", "Medium", "text-pink"),
+    (60, "D", "Semi-Medium", "text-warning"),
+    (50, "E", "Risk", "text-orange"),
+    (0, "F", "Critical", "text-danger"),
 )
 
 
@@ -89,8 +90,8 @@ def security_score(vulnerabilities, test_cases=None):
 
 
 def grade_from_score(score):
-    """Map a 0-100 score to a ``(grade, verdict)`` pair such as ``("A", "Strong")``."""
-    for threshold, grade, verdict in SCORE_GRADES:
+    """Map a 0-100 score to a ``(grade, verdict, color_class)`` triple."""
+    for threshold, grade, verdict, color in SCORE_GRADES:
         if score >= threshold:
-            return grade, verdict
-    return "F", "Critical risk"
+            return grade, verdict, color
+    return "F", "Critical", "text-danger"

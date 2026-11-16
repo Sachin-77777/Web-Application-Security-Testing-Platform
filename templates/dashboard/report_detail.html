@@ -17,7 +17,7 @@
   </div>
 </div>
 
-{% set score_tone = 'text-success' if (summary.score is not none and summary.score >= 75) else ('text-warning' if (summary.score is not none and summary.score >= 40) else 'text-danger') %}
+{% set score_tone = summary.color or 'text-secondary' %}
 <div class="card shadow-sm mb-3">
   <div class="card-body d-flex align-items-center gap-4">
     <div class="display-5 fw-bold {{ score_tone }}">{{ summary.score }}<span class="fs-6 text-muted">/100</span></div>
@@ -56,7 +56,7 @@
   <div class="card-header"><strong>Test procedures</strong></div>
   <div class="table-responsive">
     <table class="table mb-0">
-      <thead><tr><th>Name</th><th>Category</th><th>Status</th><th>Assigned</th></tr></thead>
+      <thead><tr><th>Name</th><th>Category</th><th>Status</th><th>Assigned</th><th>Notes</th></tr></thead>
       <tbody>
         {% for test in application.test_cases %}
           <tr>
@@ -64,9 +64,10 @@
             <td>{{ test.category }}</td>
             <td>{{ status_badge(test.status) }}</td>
             <td>{{ test.assignee.username if test.assignee else '—' }}</td>
+            <td>{{ test.notes or '—' }}</td>
           </tr>
         {% else %}
-          <tr><td colspan="4" class="text-muted">No tests recorded.</td></tr>
+          <tr><td colspan="5" class="text-muted">No tests recorded.</td></tr>
         {% endfor %}
       </tbody>
     </table>

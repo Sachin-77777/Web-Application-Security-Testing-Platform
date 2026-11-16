@@ -393,3 +393,8 @@
     background: #fff !important;
   }
 }
+
+/* Security score color classes */
+.text-dark-green { color: #0f766e !important; }
+.text-pink { color: #be185d !important; }
+.text-orange { color: #ea580c !important; }

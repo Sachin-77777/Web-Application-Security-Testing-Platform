@@ -65,16 +65,16 @@ def application_score(application):
     score is meaningful, so it is always computed from the vulnerabilities list.
     """
     if not application.test_cases and not application.vulnerabilities:
-        return None, "N/A", "Pending"
+        return None, "N/A", "Pending", None
     score = security_score(application.vulnerabilities, application.test_cases)
-    grade, verdict = grade_from_score(score)
-    return score, grade, verdict
+    grade, verdict, color = grade_from_score(score)
+    return score, grade, verdict, color
 
 
 def report_summary(application):
     tests = application.test_cases
     vulns = application.vulnerabilities
-    score, grade, verdict = application_score(application)
+    score, grade, verdict, color = application_score(application)
     return {
         "tests_total": len(tests),
         "tests_passed": sum(1 for item in tests if item.status == "Passed"),
@@ -90,6 +90,7 @@ def report_summary(application):
         "score": score,
         "grade": grade,
         "verdict": verdict,
+        "color": color,
     }
 
 

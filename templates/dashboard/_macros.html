@@ -14,12 +14,11 @@
 {%- endmacro %}
 
 {% macro score_badge(application) -%}
-  {% set score, grade, verdict = application_score(application) %}
+  {% set score, grade, verdict, color = application_score(application) %}
   {% if score is none %}
     <span class="badge text-bg-secondary" title="No tests have been conducted yet">{{ verdict }}</span>
   {% else %}
-    {% set tone = {'A': 'success', 'B': 'info', 'C': 'warning', 'D': 'danger', 'F': 'danger'}.get(grade, 'secondary') %}
-    <span class="badge text-bg-{{ tone }}" title="{{ verdict }}">{{ score }} · {{ grade }}</span>
+    <span class="badge {{ color }}" title="{{ verdict }}">{{ score }} · {{ grade }}</span>
   {% endif %}
 {%- endmacro %}
 
